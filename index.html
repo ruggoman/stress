@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SLC – Stress Lavoro-Correlato | D.Lgs. 81/08</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --navy:#1A3A5C;--navy-h:#1F4A72;--accent:#2563EB;--green:#16A34A;
+    --header-bg:#EBF4FF;--border:#D1E3F8;
+    --basso-bg:#D1FAE5;--basso-tx:#065F46;
+    --medio-bg:#FEF9C3;--medio-tx:#78350F;
+    --alto-bg:#FEE2E2;--alto-tx:#991B1B;
+    --row-a:#FFFFFF;--row-b:#F8FAFF;
+    --red-l:#FEE2E2;--grn-l:#D1FAE5;
+    --text:#1E293B;--muted:#64748B;
+    --sidebar-w:200px;
+  }
+  body{font-family:Arial,sans-serif;font-size:13px;background:#F8FAFF;color:var(--text);display:flex;height:100vh;overflow:hidden}
+
+  /* ── SIDEBAR ── */
+  #sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--navy);display:flex;flex-direction:column;height:100vh}
+  #sidebar-logo{padding:18px 16px 8px}
+  #sidebar-logo .logo-big{color:#fff;font-weight:800;font-size:22px;letter-spacing:-.5px}
+  #sidebar-logo .logo-sub{color:#A8C8E8;font-size:11px;margin-top:2px}
+  #sidebar-nav{flex:1;overflow-y:auto}
+  .nav-btn{display:block;width:100%;text-align:left;padding:9px 18px;border:none;background:transparent;cursor:pointer;color:#A8C8E8;font-size:13px;font-family:Arial,sans-serif;border-left:3px solid transparent;transition:background .15s}
+  .nav-btn:hover{background:var(--navy-h);color:#fff}
+  .nav-btn.active{background:var(--navy-h);color:#fff;font-weight:700;border-left-color:#60A5FA}
+  #sidebar-footer{border-top:1px solid rgba(255,255,255,.1);padding:8px}
+  .sidebar-action{display:block;width:100%;padding:7px 12px;background:rgba(255,255,255,.08);color:#CBD5E1;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-family:Arial,sans-serif;text-align:left;margin-bottom:4px}
+  .sidebar-action:hover{background:rgba(255,255,255,.15)}
+
+  /* ── MAIN ── */
+  #main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+  /* ── GOL TABS ── */
+  #gol-tabs{background:var(--navy);display:flex;align-items:center;padding:4px 8px;gap:4px;flex-wrap:wrap;min-height:40px}
+  .gol-tab{display:flex;align-items:center;border-radius:4px;overflow:visible;position:relative}
+  .gol-tab-btn{padding:4px 10px;border:none;background:transparent;cursor:pointer;color:#C8DCEF;font-size:12px;font-family:Arial,sans-serif}
+  .gol-tab-arr{padding:4px 5px;border:none;background:transparent;cursor:pointer;color:#C8DCEF;font-size:10px;font-family:Arial,sans-serif}
+  .gol-tab.active{background:#fff}
+  .gol-tab.active .gol-tab-btn{color:var(--navy);font-weight:700}
+  .gol-tab.active .gol-tab-arr{color:var(--navy)}
+  .gol-tab:not(.active){background:rgba(255,255,255,.12)}
+  .gol-menu{display:none;position:absolute;top:100%;left:0;background:#fff;border:1px solid #E2E8F0;border-radius:6px;z-index:999;min-width:140px;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+  .gol-menu.open{display:block}
+  .gol-menu button{display:block;width:100%;padding:8px 14px;border:none;background:none;cursor:pointer;text-align:left;font-size:13px;font-family:Arial,sans-serif;color:var(--text)}
+  .gol-menu button.del{color:#DC2626}
+  .gol-menu button:hover{background:#F8FAFF}
+  #btn-add-gol{padding:4px 12px;background:var(--green);color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:700;font-size:12px;font-family:Arial,sans-serif;margin-left:4px}
+
+  /* ── CONTENT ── */
+  #content{flex:1;overflow-y:auto}
+  .section-header{background:var(--header-bg);border-bottom:1px solid var(--border);padding:14px 20px}
+  .section-header h2{font-weight:700;font-size:16px;color:var(--navy)}
+  .section-header p{font-size:11px;color:var(--muted);margin-top:2px}
+  .section-body{padding:12px 20px 24px}
+
+  /* ── FORM FIELDS ── */
+  .field-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .field-row label{min-width:240px;font-size:13px;color:#334155}
+  .field-row input[type=text]{flex:1;max-width:400px;padding:6px 10px;border:1px solid #CBD5E1;border-radius:6px;font-size:13px;font-family:Arial,sans-serif}
+  .field-row input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(37,99,235,.15)}
+  .section-label{font-weight:700;font-size:11px;color:var(--navy);margin:10px 0 8px;text-transform:uppercase;letter-spacing:.05em}
+  .divider{border:none;border-top:1px solid var(--border);margin:14px 0}
+
+  /* ── TABLES ── */
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{background:var(--navy);color:#fff;padding:7px 8px;text-align:left;font-weight:600}
+  td{padding:6px 8px;border-bottom:1px solid #EEF2FF}
+  tr.row-a{background:var(--row-a)}
+  tr.row-b{background:var(--row-b)}
+  tr.row-risk{background:var(--red-l)}
+  tr.row-ok{background:var(--grn-l)}
+  tr.row-ialt{background:#FEFCE8}
+  input[type=radio]{accent-color:var(--accent);cursor:pointer;width:16px;height:16px}
+
+  /* ── COLLAPSIBLE SUBSECTIONS ── */
+  .subsec{margin-bottom:8px;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+  .subsec-hdr{background:var(--navy);color:#fff;padding:7px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:13px;user-select:none}
+  .subsec-body{display:block}
+  .subsec.collapsed .subsec-body{display:none}
+
+  /* ── LEGEND ── */
+  .legenda{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .leg-item{background:#f0f0f0;border:1px solid #E2E8F0;padding:2px 10px;border-radius:4px;font-size:11px}
+
+  /* ── SCORE BOX ── */
+  .score-box{background:#FAFBFF;border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px}
+  .score-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .score-lbl{min-width:230px;font-size:13px;color:var(--text)}
+  .score-lbl.indent{padding-left:16px;font-size:12px;color:var(--muted)}
+  .score-val{min-width:40px;font-weight:600;font-size:13px;text-align:right}
+  .score-bar{flex:1;background:#E2E8F0;border-radius:4px;height:8px;overflow:hidden}
+  .score-bar-fill{height:8px;border-radius:4px;transition:width .3s}
+  .bar-low{background:#22C55E}
+  .bar-mid{background:#F59E0B}
+  .bar-hi{background:#EF4444}
+
+  /* ── RESULT CARD ── */
+  .result-card{border-radius:10px;padding:18px 24px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
+  .result-lv-label{font-size:12px;margin-bottom:4px}
+  .result-lv-name{font-size:32px;font-weight:800}
+  .result-tot-label{font-size:11px}
+  .result-tot-val{font-size:28px;font-weight:700;text-align:right}
+  .result-thresholds{font-size:11px;margin-top:4px;text-align:right}
+
+  /* ── BUTTONS ── */
+  .btn{padding:8px 16px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-family:Arial,sans-serif}
+  .btn-primary{background:var(--accent);color:#fff;font-weight:600}
+  .btn-primary:hover{background:#1D4ED8}
+  .btn-green{background:var(--green);color:#fff;font-weight:600}
+  .btn-green:hover{background:#15803D}
+  .btn-gray{background:#94A3B8;color:#fff}
+  .btn-gray:hover{background:#64748B}
+  .nav-buttons{display:flex;justify-content:space-between;margin-top:20px;padding-top:12px;border-top:1px solid var(--border)}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+
+  /* ── BADGE ── */
+  .badge{display:inline-block;padding:2px 10px;border-radius:4px;font-weight:700;font-size:11px}
+  .badge-basso{background:var(--basso-bg);color:var(--basso-tx)}
+  .badge-medio{background:var(--medio-bg);color:var(--medio-tx)}
+  .badge-alto{background:var(--alto-bg);color:var(--alto-tx)}
+
+  /* ── INFO STRIP ── */
+  .info-strip{background:var(--header-bg);border-radius:6px;padding:10px 14px;font-size:13px;margin-top:10px}
+  .info-strip b{color:var(--navy)}
+
+  /* ── STAT PILLS (riepilogo) ── */
+  .stat-pills{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+  .stat-pill{padding:7px 16px;border-radius:6px;font-weight:700;font-size:13px}
+
+  /* ── RIEPILOGO TABLE ── */
+  .riepilogo-tbl td{padding:7px 10px}
+  .riepilogo-tbl .gol-name{font-weight:600}
+  .open-btn{padding:3px 10px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-family:Arial,sans-serif}
+
+  /* ── PERIOD FIELD ── */
+  .period-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .period-row label{font-size:13px}
+  .period-row input{padding:4px 8px;border:1px solid #CBD5E1;border-radius:5px;font-size:13px;width:220px;font-family:Arial,sans-serif}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div id="sidebar-logo">
+    <div class="logo-big">SLC</div>
+    <div class="logo-sub">Stress Lavoro-Correlato</div>
+  </div>
+  <nav id="sidebar-nav">
+    <button class="nav-btn active" data-sec="scheda">Scheda Anagrafica</button>
+    <button class="nav-btn" data-sec="ind_az">Indicatori Az.</button>
+    <button class="nav-btn" data-sec="contesto">Contesto Lavoro</button>
+    <button class="nav-btn" data-sec="contenuto">Contenuto Lavoro</button>
+    <button class="nav-btn" data-sec="risultati">Risultati</button>
+    <button class="nav-btn" data-sec="riepilogo">Riepilogo GOL</button>
+  </nav>
+  <div id="sidebar-footer">
+    <button class="sidebar-action" onclick="salvaJSON()">💾 Salva JSON</button>
+    <label class="sidebar-action" style="display:block;cursor:pointer">
+      📂 Carica JSON
+      <input type="file" accept=".json" style="display:none" onchange="caricaJSON(this)">
+    </label>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="gol-tabs"><!-- built by JS --></div>
+  <div id="content"><!-- built by JS --></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// DATI
+// ═══════════════════════════════════════════════════════════════════════════
+const INDICATORI_AZIENDALI=[
+  [1,"INDICI INFORTUNISTICI","DIAZ"],
+  [2,"Assenze per malattia (non maternità, allattamento, congedo matrimoniale)","DIA"],
+  [3,"ASSENZE DAL LAVORO","DIA"],
+  [4,"% FERIE NON GODUTE","DIA"],
+  [5,"% TRASFERIMENTI INTERNI RICHIESTI DAL PERSONALE","DIA"],
+  [6,"% ROTAZIONE DEL PERSONALE (usciti-entrati)","DIAZ"],
+  [7,"PROCEDIMENTI/SANZIONI DISCIPLINARI","DIAZ"],
+  [8,"N. visite su richiesta lavoratore al medico competente (art.41 c2 lett.c)","DIAZ"],
+  [9,"SEGNALAZIONI FORMALIZZATE medico competente di condizioni stress al lavoro","DIA"],
+  [10,"ISTANZE GIUDIZIARIE PER LICENZIAMENTO/DEMANSIONAMENTO","DIA"],
+];
+const AMBIENTE_LAVORO=[
+  [1,"Esposizione a rumore sup. al secondo livello d'azione","SI"],
+  [2,"Inadeguato comfort acustico (ambiente non industriale)","SI"],
+  [3,"Rischio cancerogeno/chimico non irrilevante","SI"],
+  [4,"Microclima adeguato","NO"],
+  [5,"Adeguato illuminamento (VDT, lavori fini, attività ad elevato impegno visivo)","NO"],
+  [6,"Rischio movimentazione manuale dei carichi","SI"],
+  [7,"Disponibilità adeguati e confortevoli DPI (se non previsti segnare SI)","NO"],
+  [8,"Lavoro a rischio di aggressione fisica/lavoro solitario","SI"],
+  [9,"Segnaletica di sicurezza chiara, immediata e pertinente ai rischi","NO"],
+  [10,"Esposizione a vibrazione superiore al limite d'azione","SI"],
+  [11,"Adeguata manutenzione macchine ed attrezzature","NO"],
+  [12,"Esposizione a radiazioni ionizzanti","SI"],
+  [13,"Esposizione a rischio biologico","SI"],
+];
+const PIANIFICAZIONE_COMPITI=[
+  [14,"Il lavoro subisce frequenti interruzioni","SI"],
+  [15,"Adeguatezza delle risorse strumentali necessarie allo svolgimento dei compiti","NO"],
+  [16,"E' presente un lavoro caratterizzato da alta monotonia","SI"],
+  [17,"Lo svolgimento della mansione richiede di eseguire più compiti contemporaneamente","SI"],
+  [18,"Chiara definizione dei compiti","NO"],
+  [19,"Adeguatezza delle risorse umane necessarie allo svolgimento dei compiti","NO"],
+];
+const CARICO_RITMO=[
+  [20,"I lavoratori hanno autonomia nella esecuzione dei compiti","NO"],
+  [21,"Ci sono variazioni imprevedibili della quantità di lavoro","SI"],
+  [22,"Vi è assenza di compiti per lunghi periodi nel turno lavorativo","SI"],
+  [23,"E' presente un lavoro caratterizzato da alta ripetitività","SI"],
+  [24,"Il ritmo lavorativo per l'esecuzione del compito è prefissato","SI"],
+  [25,"Il lavoratore non può agire sul ritmo della macchina (se non previsto → NO)","SI"],
+  [26,"I lavoratori devono prendere decisioni rapide","SI"],
+  [27,"Lavoro con utilizzo di macchine ed attrezzature ad alto rischio","SI"],
+  [28,"Lavoro con elevata responsabilità per terzi, impianti e produzione","SI"],
+];
+const ORARIO_LAVORO=[
+  [29,"E' presente regolarmente un orario lavorativo superiore alle 8 ore","SI"],
+  [30,"Viene abitualmente svolto lavoro straordinario","SI"],
+  [31,"E' presente orario di lavoro rigido (non flessibile)?","SI"],
+  [32,"La programmazione dell'orario varia frequentemente","SI"],
+  [33,"Le pause di lavoro sono chiaramente definite","NO"],
+  [34,"E' presente il lavoro a turni","SI"],
+  [35,"E' abituale il lavoro a turni notturni","SI"],
+  [36,"E' presente il turno notturno fisso o a rotazione","SI"],
+];
+const FUNZIONE_CULTURA=[
+  [37,"Diffusione organigramma aziendale","NO"],
+  [38,"Presenza di procedure aziendali","NO"],
+  [39,"Diffusione delle procedure aziendali ai lavoratori","NO"],
+  [40,"Diffusione degli obiettivi aziendali ai lavoratori","NO"],
+  [41,"Sistema di gestione della sicurezza aziendale (SA8000, BS OHSAS 18001)","NO"],
+  [42,"Presenza di un sistema di comunicazione aziendale (bacheca, internet, volantini...)","NO"],
+  [43,"Effettuazione riunioni/incontri tra dirigenti e lavoratori","NO"],
+  [44,"Presenza di un piano formativo per la crescita professionale dei lavoratori","NO"],
+  [45,"Presenza di momenti di comunicazione dell'azienda a tutto il personale","NO"],
+  [46,"Presenza di codice etico e di comportamento","NO"],
+  [47,"Identificazione di un referente per l'ascolto e la gestione dei casi di disagio lavorativo","NO"],
+];
+const RUOLO_ORGANIZZAZIONE=[
+  [48,"I lavoratori conoscono la linea gerarchica aziendale","NO"],
+  [49,"I ruoli sono chiaramente definiti","NO"],
+  [50,"Vi è una sovrapposizione di ruoli differenti sulle stesse persone","SI"],
+  [51,"Accade di frequente che i dirigenti/preposti forniscano informazioni contrastanti","SI"],
+];
+const EVOLUZIONE_CARRIERA=[
+  [52,"Sono definiti i criteri per l'avanzamento di carriera","NO"],
+  [53,"Esistono sistemi premianti in relazione alla corretta gestione del personale","NO"],
+  [54,"Esistono sistemi di verifica del raggiungimento degli obiettivi di sicurezza","NO"],
+];
+const AUTONOMIA_DECISIONALE=[
+  [55,"Il lavoro dipende da compiti precedentemente svolti da altri","SI"],
+  [56,"I lavoratori hanno sufficiente autonomia per l'esecuzione dei compiti","NO"],
+  [57,"I lavoratori hanno a disposizione le informazioni sulle decisioni aziendali","NO"],
+  [58,"Sono predisposti strumenti di partecipazione decisionale dei lavoratori","NO"],
+  [59,"Sono presenti rigidi protocolli di supervisione sul lavoro svolto","SI"],
+];
+const RAPPORTI_INTERPERSONALI=[
+  [60,"Possibilità di comunicare con i dirigenti di grado superiore da parte dei lavoratori","NO"],
+  [61,"Vengono gestiti eventuali comportamenti prevaricatori o illeciti da parte di superiori","NO"],
+  [62,"Vi è la segnalazione frequente di conflitti / litigi","SI"],
+];
+const INTERFACCIA_CASA_LAVORO=[
+  [63,"Possibilità di effettuare la pausa pasto in luogo adeguato - mensa aziendale","NO"],
+  [64,"Possibilità di orario flessibile","NO"],
+  [65,"Possibilità di raggiungere il posto di lavoro con mezzi pubblici/navetta dell'impresa","NO"],
+  [66,"Possibilità di svolgere lavoro part-time verticale/orizzontale","NO"],
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATO
+// ═══════════════════════════════════════════════════════════════════════════
+function nuovoGol(nome="Gruppo 1"){
+  return{nome,periodo_riferimento:"",anagrafica:{ragione_sociale:"",gruppo_omogeneo:nome,data_compilazione:"",datore_lavoro:"",rspp:"",medico_competente:"",rls:""},risposte:{}};
+}
+let gols=[nuovoGol("Gruppo 1")];
+let golIdx=0;
+let sezione="scheda";
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CALCOLO
+// ═══════════════════════════════════════════════════════════════════════════
+function scoreIA(r){
+  let tot=0;
+  for(const[id]of INDICATORI_AZIENDALI){const v=r["ia_"+id]||"";if(v==="I")tot+=1;else if(v==="A")tot+=4;}
+  return[tot,tot<=10?0:tot<=20?6:16];
+}
+function scoreSiNo(dom,r,pfx){
+  let c=0;for(const[id,,rr]of dom){if((r[pfx+"_"+id]||"")==rr)c++;}
+  return dom.length?Math.round(c/dom.length*100):0;
+}
+function scoreContenuto(r){
+  const amb=scoreSiNo(AMBIENTE_LAVORO,r,"c");
+  const pia=scoreSiNo(PIANIFICAZIONE_COMPITI,r,"c");
+  const car=scoreSiNo(CARICO_RITMO,r,"c");
+  const ora=scoreSiNo(ORARIO_LAVORO,r,"c");
+  return{amb,pia,car,ora,cm:(amb+pia+car+ora)/4};
+}
+function scoreContesto(r){
+  const fun=scoreSiNo(FUNZIONE_CULTURA,r,"ctx");
+  const ruo=scoreSiNo(RUOLO_ORGANIZZAZIONE,r,"ctx");
+  const evo=scoreSiNo(EVOLUZIONE_CARRIERA,r,"ctx");
+  const aut=scoreSiNo(AUTONOMIA_DECISIONALE,r,"ctx");
+  const rap=scoreSiNo(RAPPORTI_INTERPERSONALI,r,"ctx");
+  const icl=INTERFACCIA_CASA_LAVORO.filter(([id])=>(r["ctx_"+id]||"")==="NO").length;
+  const icl_adj=icl===0?-4:0;
+  return{fun,ruo,evo,aut,rap,icl,icl_adj,ctx:(fun+ruo+evo+aut+rap)/5+icl_adj};
+}
+function calcolaRischio(r){
+  const[,ia]=scoreIA(r);
+  const{amb,pia,car,ora,cm}=scoreContenuto(r);
+  const{fun,ruo,evo,aut,rap,icl,icl_adj,ctx}=scoreContesto(r);
+  const tot=ia+ctx+cm;
+  return{ia_pond:ia,amb,pia,car,ora,cm,fun,ruo,evo,aut,rap,icl,icl_adj,ctx,tot,lv:tot<=58?"BASSO":tot<=90?"MEDIO":"ALTO"};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RENDER HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function badge(lv){return`<span class="badge badge-${lv.toLowerCase()}">${lv}</span>`;}
+function navBtn(prevKey,prevLabel,nextKey,nextLabel){
+  const p=prevKey?`<button class="btn btn-gray" onclick="goSec('${prevKey}')">← ${prevLabel}</button>`:"<span></span>";
+  const n=nextKey?`<button class="btn btn-primary" onclick="goSec('${nextKey}')">${nextLabel} →</button>`:"<span></span>";
+  return`<div class="nav-buttons">${p}${n}</div>`;
+}
+function barFill(v,max){
+  const pct=Math.min(100,(v/max)*100);
+  const cls=pct>66?"bar-hi":pct>33?"bar-mid":"bar-low";
+  return`<div class="score-bar"><div class="score-bar-fill ${cls}" style="width:${pct}%"></div></div>`;
+}
+function legenda(type){
+  if(type==="ia") return`<div class="legenda">
+    <span class="leg-item" style="background:#FEE2E2">Peggioramento (A)</span>
+    <span class="leg-item" style="background:#D1FAE5">Miglioramento (D)</span>
+    <span class="leg-item" style="background:#FEFCE8">Inalterato (I/Z)</span>
+  </div>`;
+  return`<div class="legenda">
+    <span class="leg-item" style="background:#FEE2E2">Fattore di rischio presente</span>
+    <span class="leg-item" style="background:#D1FAE5">Non applicabile / assente</span>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SEZIONI
+// ═══════════════════════════════════════════════════════════════════════════
+function buildScheda(){
+  const an=gols[golIdx].anagrafica;
+  const f=(lbl,key,w="400px")=>`<div class="field-row">
+    <label>${lbl}</label>
+    <input type="text" style="max-width:${w}" value="${esc(an[key]||"")}" oninput="setAn('${key}',this.value)">
+  </div>`;
+  return`
+  <div class="section-header"><h2>Scheda Anagrafica</h2><p>Dati identificativi del gruppo omogeneo – Firme dei soggetti coinvolti</p></div>
+  <div class="section-body">
+    <div class="section-label">Dati Azienda</div>
+    ${f("Ragione / Denominazione sociale:","ragione_sociale")}
+    ${f("Nome Gruppo Omogeneo / Mansione:","gruppo_omogeneo")}
+    ${f("Data compilazione:","data_compilazione","180px")}
+    <hr class="divider">
+    <div class="section-label">Soggetti Coinvolti nella Valutazione</div>
+    ${f("Datore di Lavoro:","datore_lavoro")}
+    ${f("RSPP:","rspp")}
+    ${f("Medico Competente:","medico_competente")}
+    ${f("RLS / RLST:","rls")}
+    ${navBtn(null,null,"ind_az","Indicatori Aziendali")}
+  </div>`;
+}
+
+function buildIndAz(){
+  const r=gols[golIdx].risposte;
+  const g=gols[golIdx];
+  const[tot,pond]=scoreIA(r);
+  let rows="";
+  INDICATORI_AZIENDALI.forEach(([id,lbl,opts],i)=>{
+    const key="ia_"+id;const v=r[key]||"";
+    const rowCls=v==="A"?"row-risk":v==="D"?"row-ok":v==="I"||v==="Z"?"row-ialt":(i%2===0?"row-a":"row-b");
+    const radios=["D","I","A","Z"].map(opt=>opts.includes(opt)
+      ?`<td style="text-align:center"><input type="radio" name="${key}" value="${opt}" ${v===opt?"checked":""} onchange="setRisp('${key}','${opt}')"></td>`
+      :`<td style="text-align:center;color:#CBD5E1">—</td>`
+    ).join("");
+    rows+=`<tr class="${rowCls}"><td style="text-align:center;color:#94A3B8;font-size:11px;width:32px">${id}</td><td>${esc(lbl)}</td>${radios}</tr>`;
+  });
+  return`
+  <div class="section-header"><h2>Indicatori Aziendali</h2><p>Valutare l'andamento degli ultimi 3 anni · D=Dim.(0pt) I=Inalt.(1pt) A=Aum.(4pt) Z=Zero(0pt)</p></div>
+  <div class="section-body">
+    <div class="period-row"><label>Periodo di riferimento (anni):</label>
+      <input type="text" value="${esc(g.periodo_riferimento||"")}" oninput="setPeriodo(this.value)">
+    </div>
+    ${legenda("ia")}
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th style="width:32px">N.</th><th>Indicatore</th>
+        <th style="width:40px;text-align:center">D</th>
+        <th style="width:40px;text-align:center">I</th>
+        <th style="width:40px;text-align:center">A</th>
+        <th style="width:40px;text-align:center">Z</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+    <div class="info-strip" style="margin-top:10px">
+      Punteggio grezzo: <b>${tot}</b> &nbsp;|&nbsp; Punteggio ponderato: <b style="color:${pond>0?"#991B1B":"#065F46"}">${pond}</b>
+      <span style="margin-left:12px;font-size:11px;color:var(--muted)">(≤10→0pt · 11-20→6pt · &gt;20→16pt)</span>
+    </div>
+    ${navBtn("scheda","Scheda","contesto","Contesto Lavoro")}
+  </div>`;
+}
+
+function buildSubsec(title,domande,prefix,risposte,scoreVal){
+  let rows="";
+  domande.forEach(([id,lbl,rr],i)=>{
+    const key=`${prefix}_${id}`;const v=risposte[key]||"";
+    const isRisk=v===rr;
+    const rowCls=v===""?(i%2===0?"row-a":"row-b"):isRisk?"row-risk":"row-ok";
+    rows+=`<tr class="${rowCls}">
+      <td style="width:28px;text-align:center;color:#94A3B8;font-size:11px">${id}</td>
+      <td>${esc(lbl)}</td>
+      <td style="white-space:nowrap;text-align:right">
+        <label style="cursor:pointer;margin-right:8px"><input type="radio" name="${key}" value="SI" ${v==="SI"?"checked":""} onchange="setRisp('${key}','SI')"> SI</label>
+        <label style="cursor:pointer"><input type="radio" name="${key}" value="NO" ${v==="NO"?"checked":""} onchange="setRisp('${key}','NO')"> NO</label>
+      </td>
+    </tr>`;
+  });
+  const scoreStr=scoreVal!==null?` – ${scoreVal}%`:"";
+  return`<div class="subsec" id="subsec-${prefix}-${title.replace(/\s/g,"")}">
+    <div class="subsec-hdr" onclick="toggleSubsec(this.parentElement)">
+      <span>${title}</span><span style="font-size:11px;opacity:.85">${scoreStr} ▲</span>
+    </div>
+    <div class="subsec-body">
+    <table><tbody>${rows}</tbody></table>
+    </div>
+  </div>`;
+}
+
+function buildContenuto(){
+  const r=gols[golIdx].risposte;
+  const{amb,pia,car,ora,cm}=scoreContenuto(r);
+  return`
+  <div class="section-header"><h2>Contenuto del Lavoro</h2><p>Rispondere SI/NO ad ogni domanda. Rosso = fattore di rischio presente.</p></div>
+  <div class="section-body">
+    ${legenda("sino")}
+    ${buildSubsec("Ambiente di Lavoro",AMBIENTE_LAVORO,"c",r,amb)}
+    ${buildSubsec("Pianificazione dei Compiti",PIANIFICAZIONE_COMPITI,"c",r,pia)}
+    ${buildSubsec("Carico e Ritmo di Lavoro",CARICO_RITMO,"c",r,car)}
+    ${buildSubsec("Orario di Lavoro",ORARIO_LAVORO,"c",r,ora)}
+    <div class="info-strip">Media contenuto: <b>${cm.toFixed(1)}%</b>
+      <span style="margin-left:14px;font-size:11px;color:var(--muted)">Amb:${amb}% · Pia:${pia}% · Car:${car}% · Ora:${ora}%</span>
+    </div>
+    ${navBtn("contesto","Contesto Lavoro","risultati","Risultati")}
+  </div>`;
+}
+
+function buildContesto(){
+  const r=gols[golIdx].risposte;
+  const{fun,ruo,evo,aut,rap,icl,icl_adj,ctx}=scoreContesto(r);
+  return`
+  <div class="section-header"><h2>Contesto del Lavoro</h2><p>Rispondere SI/NO ad ogni domanda. Rosso = fattore di rischio presente.</p></div>
+  <div class="section-body">
+    ${legenda("sino")}
+    ${buildSubsec("Funzione e Cultura Organizzativa",FUNZIONE_CULTURA,"ctx",r,fun)}
+    ${buildSubsec("Ruolo nell'Organizzazione",RUOLO_ORGANIZZAZIONE,"ctx",r,ruo)}
+    ${buildSubsec("Evoluzione della Carriera",EVOLUZIONE_CARRIERA,"ctx",r,evo)}
+    ${buildSubsec("Autonomia Decisionale",AUTONOMIA_DECISIONALE,"ctx",r,aut)}
+    ${buildSubsec("Rapporti Interpersonali",RAPPORTI_INTERPERSONALI,"ctx",r,rap)}
+    ${buildSubsec("Interfaccia Casa-Lavoro",INTERFACCIA_CASA_LAVORO,"ctx",r,null)}
+    <div class="info-strip">Totale contesto: <b>${ctx.toFixed(1)}</b>
+      ${icl_adj!==0?`<span style="margin-left:10px;color:var(--basso-tx)">★ Bonus interfaccia casa-lavoro: ${icl_adj}pt</span>`:""}
+    </div>
+    ${navBtn("ind_az","Indicatori Az.","contenuto","Contenuto Lavoro")}
+  </div>`;
+}
+
+function buildRisultati(){
+  const g=gols[golIdx];
+  const res=calcolaRischio(g.risposte);
+  const nome=g.anagrafica.gruppo_omogeneo||g.nome;
+  const lvColors={BASSO:["var(--basso-bg)","var(--basso-tx)"],MEDIO:["var(--medio-bg)","var(--medio-tx)"],ALTO:["var(--alto-bg)","var(--alto-tx)"]};
+  const[bg,tx]=lvColors[res.lv];
+
+  const srow=(lbl,val,max,indent)=>{
+    const isNum=typeof val==="number";
+    return`<div class="score-row">
+      <span class="score-lbl${indent?" indent":""}">${lbl}</span>
+      <span class="score-val">${isNum?val.toFixed(indent?0:1):val}</span>
+      ${max&&isNum?barFill(val,max):"<span style='flex:1'></span>"}
+    </div>`;
+  };
+
+  return`
+  <div class="section-header"><h2>Risultati della Valutazione</h2><p>${esc(nome)}</p></div>
+  <div class="section-body">
+    <div class="result-card" style="background:${bg}">
+      <div>
+        <div class="result-lv-label" style="color:${tx}">LIVELLO DI RISCHIO STRESS LAVORO-CORRELATO</div>
+        <div class="result-lv-name" style="color:${tx}">${res.lv}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="result-tot-label" style="color:${tx}">Punteggio totale</div>
+        <div class="result-tot-val" style="color:${tx}">${res.tot.toFixed(1)}</div>
+        <div class="result-thresholds" style="color:${tx}">≤58 BASSO · 59–90 MEDIO · &gt;90 ALTO</div>
+      </div>
+    </div>
+    <div class="score-box">
+      ${srow("Indicatori Aziendali (pond.)",res.ia_pond,16,false)}
+      ${srow("Contenuto – Media",res.cm,100,false)}
+      ${srow("→ Ambiente di Lavoro",res.amb,100,true)}
+      ${srow("→ Pianificazione Compiti",res.pia,100,true)}
+      ${srow("→ Carico e Ritmo",res.car,100,true)}
+      ${srow("→ Orario di Lavoro",res.ora,100,true)}
+      ${srow("Contesto – Totale",res.ctx,100,false)}
+      ${srow("→ Funzione e Cultura",res.fun,100,true)}
+      ${srow("→ Ruolo Organizzazione",res.ruo,100,true)}
+      ${srow("→ Evoluzione Carriera",res.evo,100,true)}
+      ${srow("→ Autonomia Decisionale",res.aut,100,true)}
+      ${srow("→ Rapporti Interpersonali",res.rap,100,true)}
+      ${res.icl_adj!==0?srow("→ Interfaccia Casa/Lav. (adj)",res.icl_adj,null,true):""}
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="esportaWordGol()">Esporta questo GOL (Word)</button>
+    </div>
+    ${navBtn("contenuto","Contenuto Lavoro","riepilogo","Riepilogo GOL")}
+  </div>`;
+}
+
+function buildRiepilogo(){
+  let rows="";
+  gols.forEach((g,i)=>{
+    const res=calcolaRischio(g.risposte);
+    const nome=g.anagrafica.gruppo_omogeneo||g.nome;
+    const cls=i%2===0?"row-a":"row-b";
+    rows+=`<tr class="${cls}">
+      <td class="gol-name">${esc(nome)}</td>
+      <td>${badge(res.lv)}</td>
+      <td><b>${res.tot.toFixed(1)}</b></td>
+      <td>${res.ia_pond.toFixed(0)}</td>
+      <td>${res.cm.toFixed(1)}</td>
+      <td>${res.ctx.toFixed(1)}</td>
+      <td>${res.amb}</td>
+      <td>${res.ora}</td>
+      <td><button class="open-btn" onclick="apriGol(${i})">Apri</button></td>
+    </tr>`;
+  });
+  const stats=["BASSO","MEDIO","ALTO"].map(lv=>{
+    const cnt=gols.filter(g=>calcolaRischio(g.risposte).lv===lv).length;
+    return`<div class="stat-pill badge-${lv.toLowerCase()}">${cnt} GOL – ${lv}</div>`;
+  }).join("");
+  return`
+  <div class="section-header"><h2>Riepilogo Gruppi Omogenei Lavoratori</h2><p>Panoramica di tutti i GOL valutati</p></div>
+  <div class="section-body">
+    <div style="overflow-x:auto">
+    <table class="riepilogo-tbl">
+      <thead><tr>
+        <th>GOL / Mansione</th><th>Livello</th><th>Totale</th>
+        <th>Ind.Az.</th><th>Contenuto</th><th>Contesto</th>
+        <th>Amb.</th><th>Orario</th><th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+    <div class="stat-pills">${stats}</div>
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="esportaWordTutti()">Esporta TUTTI i GOL (Word)</button>
+      <button class="btn btn-green" onclick="aggiungiGol()">+ Nuovo GOL</button>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AZIONI UI
+// ═══════════════════════════════════════════════════════════════════════════
+function goSec(sec){sezione=sec;render();}
+function setAn(key,val){
+  gols[golIdx].anagrafica[key]=val;
+  if(key==="gruppo_omogeneo"){gols[golIdx].nome=val;renderTabs();}
+}
+function setPeriodo(val){gols[golIdx].periodo_riferimento=val;}
+function setRisp(key,val){
+  gols[golIdx].risposte[key]=val;
+  const r=gols[golIdx].risposte;
+
+  if(sezione==="ind_az"){
+    // aggiorna colore riga IA
+    const inp=document.querySelector('input[name="'+key+'"]');
+    if(inp){
+      const row=inp.closest("tr");
+      if(row){
+        const bg=val==="A"?"#FEE2E2":val==="D"?"#D1FAE5":(val==="I"||val==="Z")?"#FEFCE8":"";
+        row.className="";
+        row.style.background=bg;
+      }
+    }
+    // aggiorna punteggio grezzo e ponderato live
+    const[tot,pond]=scoreIA(r);
+    const strip=document.querySelector(".info-strip");
+    if(strip){
+      strip.innerHTML="Punteggio grezzo: <b>"+tot+"</b> &nbsp;|&nbsp; Punteggio ponderato: <b style=\"color:"+(pond>0?"#991B1B":"#065F46")+"\">"+pond+"</b><span style=\"margin-left:12px;font-size:11px;color:var(--muted)\">(≤10→0pt · 11-20→6pt · &gt;20→16pt)</span>";
+    }
+    return;
+  }
+
+  // sezioni contesto / contenuto
+  const inp=document.querySelector('input[name="'+key+'"]');
+  if(inp){
+    const subsecEl=inp.closest(".subsec");
+    if(subsecEl) _refreshSubsec(subsecEl,r);
+  }
+  // aggiorna info-strip
+  const strip=document.querySelector(".info-strip");
+  if(strip){
+    const sc=scoreContesto(r),sv=scoreContenuto(r);
+    if(sezione==="contesto")
+      strip.innerHTML="Totale contesto: <b>"+sc.ctx.toFixed(1)+"</b>"+(sc.icl_adj!==0?"<span style=\"margin-left:10px;color:var(--basso-tx)\">★ Bonus interfaccia casa-lavoro: "+sc.icl_adj+"pt</span>":"");
+    else if(sezione==="contenuto")
+      strip.innerHTML="Media contenuto: <b>"+sv.cm.toFixed(1)+"%</b><span style=\"margin-left:14px;font-size:11px;color:var(--muted)\">Amb:"+sv.amb+"% · Pia:"+sv.pia+"% · Car:"+sv.car+"% · Ora:"+sv.ora+"%</span>";
+  }
+}
+
+
+const DOM_BY_TITLE={
+  "Ambiente di Lavoro":[AMBIENTE_LAVORO,"c"],
+  "Pianificazione dei Compiti":[PIANIFICAZIONE_COMPITI,"c"],
+  "Carico e Ritmo di Lavoro":[CARICO_RITMO,"c"],
+  "Orario di Lavoro":[ORARIO_LAVORO,"c"],
+  "Funzione e Cultura Organizzativa":[FUNZIONE_CULTURA,"ctx"],
+  "Ruolo nell'Organizzazione":[RUOLO_ORGANIZZAZIONE,"ctx"],
+  "Evoluzione della Carriera":[EVOLUZIONE_CARRIERA,"ctx"],
+  "Autonomia Decisionale":[AUTONOMIA_DECISIONALE,"ctx"],
+  "Rapporti Interpersonali":[RAPPORTI_INTERPERSONALI,"ctx"],
+  "Interfaccia Casa-Lavoro":[INTERFACCIA_CASA_LAVORO,"ctx"],
+};
+
+function _refreshSubsec(subsecEl,r){
+  const title=subsecEl.querySelector(".subsec-hdr span:first-child")?.textContent||"";
+  const entry=DOM_BY_TITLE[title];if(!entry)return;
+  const[domande,pfx]=entry;
+  // aggiorna colori righe
+  domande.forEach(([id,,rr],i)=>{
+    const key=pfx+"_"+id;
+    const v=r[key]||"";
+    const row=subsecEl.querySelector(`input[name="${key}"]`)?.closest("tr");
+    if(!row)return;
+    row.style.background=v===""?(i%2===0?"#FFFFFF":"#F8FAFF"):v===rr?"#FEE2E2":"#D1FAE5";
+  });
+  // aggiorna percentuale nell'header
+  const hdrSpan=subsecEl.querySelector(".subsec-hdr span:last-child");
+  if(!hdrSpan)return;
+  const sc=scoreContesto(r),sv=scoreContenuto(r);
+  const scoreMap={"Ambiente di Lavoro":sv.amb,"Pianificazione dei Compiti":sv.pia,
+    "Carico e Ritmo di Lavoro":sv.car,"Orario di Lavoro":sv.ora,
+    "Funzione e Cultura Organizzativa":sc.fun,"Ruolo nell'Organizzazione":sc.ruo,
+    "Evoluzione della Carriera":sc.evo,"Autonomia Decisionale":sc.aut,
+    "Rapporti Interpersonali":sc.rap};
+  const val=scoreMap[title];
+  const arrow=hdrSpan.textContent.endsWith("▲")?"▲":"▼";
+  if(val!==undefined) hdrSpan.textContent=` – ${val}% ${arrow}`;
+}
+
+function toggleSubsec(el){
+  el.classList.toggle("collapsed");
+  const arr=el.querySelector(".subsec-hdr span:last-child");
+  if(arr)arr.textContent=arr.textContent.replace(/[▲▼]/g,el.classList.contains("collapsed")?"▼":"▲");
+}
+function aggiungiGol(){
+  const n=gols.length+1;
+  gols.push(nuovoGol("GOL "+n));
+  golIdx=gols.length-1;
+  sezione="scheda";
+  render();
+}
+function apriGol(i){golIdx=i;sezione="risultati";render();}
+function duplicaGol(i){
+  const c=JSON.parse(JSON.stringify(gols[i]));
+  const nm=(c.anagrafica.gruppo_omogeneo||c.nome)+" (copia)";
+  c.nome=nm;c.anagrafica.gruppo_omogeneo=nm;
+  gols.splice(i+1,0,c);golIdx=i+1;closeAllMenus();render();
+}
+function eliminaGol(i){
+  if(gols.length===1){alert("Non puoi eliminare l'unico GOL presente.");return;}
+  const nm=gols[i].anagrafica.gruppo_omogeneo||gols[i].nome;
+  if(!confirm("Eliminare il GOL \""+nm+"\"?"))return;
+  gols.splice(i,1);
+  golIdx=Math.max(0,Math.min(golIdx,gols.length-1));
+  closeAllMenus();render();
+}
+function closeAllMenus(){document.querySelectorAll(".gol-menu").forEach(m=>m.classList.remove("open"));}
+function toggleMenu(i,e){
+  e.stopPropagation();
+  const all=document.querySelectorAll(".gol-menu");
+  all.forEach((m,mi)=>mi!==i&&m.classList.remove("open"));
+  document.querySelectorAll(".gol-menu")[i]?.classList.toggle("open");
+}
+document.addEventListener("click",closeAllMenus);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ESPORTAZIONE JSON
+// ═══════════════════════════════════════════════════════════════════════════
+function salvaJSON(){
+  const data=JSON.stringify({gols},null,2);
+  const blob=new Blob([data],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  const az=(gols[0]?.anagrafica?.ragione_sociale||"sessione").replace(/[^a-zA-Z0-9_ -]/g,"").trim().replace(/ /g,"_");
+  a.download="SLC_"+az+"_"+new Date().toISOString().slice(0,10).replace(/-/g,"")+".json";
+  a.click();URL.revokeObjectURL(url);
+}
+function caricaJSON(inp){
+  const file=inp.files[0];if(!file)return;
+  const rdr=new FileReader();
+  rdr.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(d.gols)gols=d.gols;
+      else if(d.azienda||d.risposte){const g=nuovoGol();Object.assign(g.anagrafica,d.azienda||{});g.risposte=d.risposte||{};g.nome=g.anagrafica.gruppo_omogeneo||"GOL 1";gols=[g];}
+      golIdx=0;sezione="scheda";render();
+    }catch{alert("Errore nel caricamento del file JSON.");}
+  };
+  rdr.readAsText(file);inp.value="";
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ESPORTAZIONE DOCX (struttura XML nativa, identica al Python)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── helpers XML ──────────────────────────────────────────────────────────
+function xe(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+function wPar(content,opts={}){
+  const jc=opts.align?`<w:jc w:val="${opts.align}"/>`:"";
+  const shd=opts.shd?`<w:shd w:val="clear" w:color="auto" w:fill="${opts.shd}"/>`:"";
+  const sp=opts.spacing?`<w:spacing w:before="${opts.spacing.before||0}" w:after="${opts.spacing.after||0}"/>`:"";
+  const sty=opts.style?`<w:pStyle w:val="${opts.style}"/>`:"";
+  const ppr=(sty||jc||shd||sp)?`<w:pPr>${sty}${sp}${jc}${shd}</w:pPr>`:"";
+  return`<w:p>${ppr}${content}</w:p>`;
+}
+function wRun(text,opts={}){
+  const b=opts.bold?`<w:b/>`:"";
+  const bv=opts.bold===false?`<w:b w:val="0"/>`:"";
+  const col=opts.color?`<w:color w:val="${opts.color}"/>`:"";
+  const sz=opts.sz?`<w:sz w:val="${opts.sz}"/>`:"";
+  const fnt=opts.font!==false?`<w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>`:"";
+  const shdR=opts.shd?`<w:shd w:val="clear" w:color="auto" w:fill="${opts.shd}"/>`:"";
+  const rpr=`<w:rPr>${fnt}${b}${bv}${col}${sz}${shdR}</w:rPr>`;
+  const sp=(/^\s|\s$/.test(text))?' xml:space="preserve"':"";
+  return`<w:r>${rpr}<w:t${sp}>${xe(text)}</w:t></w:r>`;
+}
+function wFld(instr){
+  return`<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="14"/><w:color w:val="606060"/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r>`+
+    `<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="14"/><w:color w:val="606060"/></w:rPr><w:instrText xml:space="preserve"> ${instr} </w:instrText></w:r>`+
+    `<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="14"/><w:color w:val="606060"/></w:rPr><w:fldChar w:fldCharType="end"/></w:r>`;
+}
+function wTxtRun(text){return`<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="14"/><w:color w:val="606060"/></w:rPr><w:t xml:space="preserve">${xe(text)}</w:t></w:r>`;}
+function wTabRun(){return`<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="14"/><w:color w:val="606060"/></w:rPr><w:tab/></w:r>`;}
+
+function wCell(content,fill,w,opts={}){
+  const shd=fill?`<w:shd w:val="clear" w:color="auto" w:fill="${fill}"/>`:"";
+  const mar=opts.margins?`<w:tcMar><w:top w:w="80" w:type="dxa"/><w:bottom w:w="80" w:type="dxa"/><w:left w:w="120" w:type="dxa"/><w:right w:w="120" w:type="dxa"/></w:tcMar>`:"";
+  return`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${shd}${mar}</w:tcPr>${content}</w:tc>`;
+}
+function wHdrCell(label,fill,w){
+  return wCell(wPar(wRun(label,{bold:true,color:"FFFFFF",sz:16}),{align:"left"}),fill||"1F497D",w);
+}
+function wTblGrid(widths){return`<w:tblGrid>${widths.map(w=>`<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>`;}
+function wTblProps(widths){
+  return`<w:tblPr><w:tblStyle w:val="TableGrid"/><w:tblW w:type="auto" w:w="0"/>`+
+    `<w:tblLook w:firstColumn="1" w:firstRow="1" w:lastColumn="0" w:lastRow="0" w:noHBand="0" w:noVBand="1" w:val="04A0"/></w:tblPr>`+wTblGrid(widths);
+}
+function wTrHdr(cells){return`<w:tr><w:trPr><w:cantSplit w:val="1"/></w:trPr>${cells}</w:tr>`;}
+function wTrData(cells,height=250){return`<w:tr><w:trPr><w:trHeight w:val="${height}" w:hRule="atLeast"/><w:cantSplit w:val="1"/></w:trPr>${cells}</w:tr>`;}
+function wDataCell(label,fill,w,bold=false,sz=16,align="left"){
+  return wCell(wPar(wRun(label,{bold,sz,font:true}),{align}),fill,w);
+}
+function wDataCellBoldVal(label,fill,w){
+  return wCell(wPar(wRun(label,{bold:true,sz:16}),{align:"left"}),fill,w);
+}
+function wPageBreak(){
+  return`<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
+}
+function wHeading(text,level){
+  const sty=["Heading1","Heading2","Heading3"][level-1]||"Heading2";
+  return wPar(wRun(text,{bold:false,color:"1F497D",font:true}),{style:sty});
+}
+
+// ── tabelle specifiche ───────────────────────────────────────────────────
+
+function tblScheda(an,periodo){
+  const W=4703;
+  const fields=[
+    ["Ragione Sociale",an.ragione_sociale||""],
+    ["Gruppo Omogeneo/Mansione",an.gruppo_omogeneo||""],
+    ["Data compilazione",an.data_compilazione||""],
+    ["Periodo di riferimento",periodo||""],
+    ["Datore di Lavoro",an.datore_lavoro||""],
+    ["RSPP",an.rspp||""],
+    ["Medico Competente",an.medico_competente||""],
+    ["RLS/RLST",an.rls||""],
+  ];
+  const hdr=wTrHdr(wHdrCell("Campo","1F497D",W)+wHdrCell("Valore","1F497D",W));
+  const rows=fields.map(([k,v],i)=>{
+    const bg=i%2===0?"FFFFFF":"F7F7F7";
+    return wTrData(wDataCell(k,bg,W,true,18)+wDataCell(v,bg,W,false,18));
+  }).join("");
+  return`<w:tbl>${wTblProps([W,W])}${hdr}${rows}</w:tbl>`;
+}
+
+function tblRisultatiBox(lv,tot){
+  const lvFill={BASSO:"C6EFCE",MEDIO:"FFC000",ALTO:"FF0000"};
+  const lvFillText={BASSO:"006100",MEDIO:"FFFFFF",ALTO:"FFFFFF"};
+  const fill=lvFill[lv]||"D9D9D9";
+  const textCol=lvFillText[lv]||"000000";
+  const label=`  LIVELLO DI RISCHIO: ${lv}  -  Punteggio totale: ${tot.toFixed(1)}  `;
+  return wPar(wRun(label,{bold:true,color:textCol,sz:26,font:false}),{align:"center",shd:fill});
+}
+
+function tblInterpretazione(lv){
+  const txt={
+    BASSO:"Non si evidenziano particolari condizioni organizzative che possono determinare la presenza di stress correlato al lavoro.",
+    MEDIO:"L'analisi degli indicatori evidenzia condizioni organizzative che possono determinare la presenza di stress correlato al lavoro. Vanno adottate azioni correttive e di miglioramento.",
+    ALTO:"L'analisi degli indicatori evidenzia condizioni organizzative che determinano la presenza di stress correlato al lavoro. Vanno adottate azioni correttive urgenti.",
+  };
+  return wPar(wRun(txt[lv]||"",{sz:20,font:false}),{align:"both",spacing:{before:20,after:20}});
+}
+
+// tabella punteggi 4 colonne: Area | Punteggio | Soglie | Livello
+function tblPunteggi(r){
+  const W=2351; // 4 colonne uguali
+  const lvFillCell={BASSO:"C6EFCE",MEDIO:"FFEB9C",ALTO:"FFC7CE"};
+  const hdr=wTrHdr(
+    wHdrCell("Area","1F497D",W)+wHdrCell("Punteggio","1F497D",W)+
+    wHdrCell("Soglie (Basso | Medio | Alto)","1F497D",W)+wHdrCell("Livello","1F497D",W)
+  );
+
+  function pRow(label,val,soglie,lv,isBold,fill){
+    const bg=fill||"F2F2F2";
+    const lvFill=lvFillCell[lv]||"EEEEEE";
+    return wTrData(
+      wDataCell(label,bg,W,isBold,16)+
+      wDataCell(val,bg,W,isBold,16)+
+      wDataCell(soglie,bg,W,false,14)+
+      wDataCellBoldVal(lv,lvFill,W)
+    );
+  }
+
+  function subRow(label,val,soglie,lv){
+    return wTrData(
+      wDataCell(label,"F2F2F2",W,false,16)+
+      wDataCell(val,"F2F2F2",W,false,16)+
+      wDataCell(soglie,"F2F2F2",W,false,14)+
+      wDataCellBoldVal(lv,lvFillCell[lv]||"EEEEEE",W)
+    );
+  }
+
+  function lvScore(v,b,m){return v<=b?"BASSO":v<=m?"MEDIO":"ALTO";}
+
+  const lvIA=lvScore(r.ia_pond,10,20==="x"?10:999); // IA ha logica propria
+  const lvIAstr=r.ia_pond===0?"BASSO":r.ia_pond===6?"BASSO":"ALTO";// semplificato
+
+  const rows=[
+    pRow("Indicatori Aziendali",r.ia_pond.toFixed(1),"0-10=0pt | 11-20=6pt | 21-40=16pt",
+      r.ia_pond===0?"BASSO":r.ia_pond===6?"BASSO":"ALTO",true,"D9D9D9"),
+    subRow("Contenuto - Ambiente lavoro",r.amb.toFixed(1),"0-22 | 23-45 | 46+",lvScore(r.amb,22,45)),
+    subRow("Contenuto - Pianificazione",r.pia.toFixed(1),"0-49 | 50-82 | 83+",lvScore(r.pia,49,82)),
+    subRow("Contenuto - Carico/Ritmo",r.car.toFixed(1),"0-32 | 33-55 | 56+",lvScore(r.car,32,55)),
+    subRow("Contenuto - Orario lavoro",r.ora.toFixed(1),"0-37 | 38-74 | 75+",lvScore(r.ora,37,74)),
+    pRow("Contenuto del lavoro (media)",r.cm.toFixed(1),"0-23 | 24-43 | 44+",lvScore(r.cm,23,43),true,"D9D9D9"),
+    subRow("Contesto - Funzione/Cultura",r.fun.toFixed(1),"0-44 | 45-72 | 73+",lvScore(r.fun,44,72)),
+    subRow("Contesto - Ruolo org.",r.ruo.toFixed(1),"0-49 | 50-74 | 75+",lvScore(r.ruo,49,74)),
+    subRow("Contesto - Evoluzione carriera",r.evo.toFixed(1),"0-66 | 67-99 | 100",lvScore(r.evo,66,99)),
+    subRow("Contesto - Autonomia",r.aut.toFixed(1),"0-59 | 60-79 | 80+",lvScore(r.aut,59,79)),
+    subRow("Contesto - Rapporti interp.",r.rap.toFixed(1),"0-66 | 67-99 | 100",lvScore(r.rap,66,99)),
+    pRow("Contesto del lavoro (totale)",r.ctx.toFixed(1),"0-37 | 38-53 | 54+",lvScore(r.ctx,37,53),true,"D9D9D9"),
+    pRow("TOTALE COMPLESSIVO",r.tot.toFixed(1),"0-58 BASSO | 59-90 MEDIO | 91+ ALTO",r.lv,true,"D9D9D9"),
+  ].join("");
+
+  return`<w:tbl>${wTblProps([W,W,W,W])}${hdr}${rows}</w:tbl>`;
+}
+
+// legenda indicatori aziendali (runs colorati in un paragrafo)
+function pLegendaIA(){
+  return`<w:p><w:pPr><w:spacing w:after="20"/></w:pPr>`+
+    wRun("  D = Diminuito (0 pt)  ",{bold:true,sz:16,shd:"C6EFCE"})+
+    wRun("  I = Inalterato (1 pt)  ",{bold:true,sz:16,shd:"FFFDE7"})+
+    wRun("  A = Aumentato (4 pt)  ",{bold:true,sz:16,shd:"FFC7CE"})+
+    wRun("  Z = Uguale a zero (0 pt)  ",{bold:true,sz:16,shd:"F2F2F2"})+
+    `</w:p>`;
+}
+
+// tabella indicatori aziendali: N.(420) | Indicatore(6306) | Risp.(1400) | Pt.(900)
+function tblIA(risposte){
+  const Wn=420,Wl=6306,Wr=1400,Wp=900;
+  const hdr=wTrHdr(wHdrCell("N.","1F497D",Wn)+wHdrCell("Indicatore","1F497D",Wl)+wHdrCell("Risp.","1F497D",Wr)+wHdrCell("Pt.","1F497D",Wp));
+  const valFill={A:"FFC7CE",I:"FFFDE7",D:"C6EFCE",Z:"FFFDE7"};
+  const pts={A:4,I:1,D:0,Z:0};
+  const rows=INDICATORI_AZIENDALI.map(([id,lbl],i)=>{
+    const v=risposte["ia_"+id]||"";
+    const bg=i%2===0?"FFFFFF":"F7F7F7";
+    const vf=valFill[v]||"FFFFFF";
+    const pt=pts[v]!==undefined?String(pts[v]):"-";
+    const disp=v||"-";
+    return wTrData(
+      wDataCell(String(id),bg,Wn,false,16)+
+      wDataCell(lbl,bg,Wl,false,16)+
+      wCell(wPar(wRun(disp,{bold:true,sz:16}),{align:"center"}),vf,Wr)+
+      wCell(wPar(wRun(pt,{bold:true,sz:16}),{align:"center"}),vf,Wp),
+      250
+    );
+  }).join("");
+  return`<w:tbl>${wTblProps([Wn,Wl,Wr,Wp])}${hdr}${rows}</w:tbl>`;
+}
+
+// tabella Contesto/Contenuto SI/NO: N.(420) | Indicatore(7206) | Risp.(1400)
+function tblSiNo(domande,prefix,risposte){
+  const Wn=420,Wl=7206,Wr=1400;
+  const hdr=wTrHdr(wHdrCell("N.","1F497D",Wn)+wHdrCell("Indicatore","1F497D",Wl)+wCell(wPar(wRun("Risp.",{bold:true,color:"FFFFFF",sz:16}),{align:"center"}),"1F497D",Wr));
+  const rows=domande.map(([id,lbl,rr],i)=>{
+    const v=risposte[prefix+"_"+id]||"";
+    const bg=i%2===0?"FFFFFF":"F7F7F7";
+    const isRisk=v===rr;
+    const vf=v??(isRisk?"FFC7CE":"FFFFFF");
+    const vfill=v===""?"FFFFFF":isRisk?"FFC7CE":"C6EFCE";
+    const disp=v||"-";
+    return wTrData(
+      wDataCell(String(id),bg,Wn,false,16)+
+      wDataCell(lbl,bg,Wl,false,16)+
+      wCell(wPar(wRun(disp,{bold:true,sz:16}),{align:"center"}),vfill,Wr),
+      275
+    );
+  }).join("");
+  return`<w:tbl>${wTblProps([Wn,Wl,Wr])}${hdr}${rows}</w:tbl>`;
+}
+
+// ── footer con numero pagina ─────────────────────────────────────────────
+function buildFooterXml(nomeFile){
+  const tabs=`<w:pPr><w:spacing w:before="0" w:after="0"/><w:jc w:val="left"/>`+
+    `<w:tabs><w:tab w:val="clear" w:pos="4680"/><w:tab w:val="right" w:pos="9360"/></w:tabs></w:pPr>`;
+  return`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:p>${tabs}${wTxtRun(nomeFile)}${wTabRun()}${wTxtRun("Pag. ")}${wFld("PAGE")}${wTxtRun(" di ")}${wFld("NUMPAGES")}</w:p>
+</w:ftr>`;
+}
+
+// ── document.xml body ────────────────────────────────────────────────────
+function buildDocumentXml(lista,nomeFile){
+  const ris=lista.map(g=>calcolaRischio(g.risposte));
+  let body="";
+
+  // ── PAGINA 1: titolo + anagrafica ditta + riepilogo GOL ─────────────────
+  // Dati azienda dal primo GOL (ragione sociale, datore, rspp ecc.)
+  const an0=lista[0].anagrafica;
+  const periodo0=lista[0].periodo_riferimento;
+
+  // Titolo documento
+  body+=wPar(wRun("VALUTAZIONE STRESS LAVORO-CORRELATO",{bold:true,color:"1F497D",sz:36,font:false}),{align:"center"});
+  body+=wPar(wRun("D.Lgs. 81/08 \u2013 Proposta metodologica INAIL \u2013 Check list indicatori verificabili",{color:"707070",sz:20,font:false}),{align:"center"});
+  body+=wPar("");
+
+  // Scheda anagrafica ditta (senza riga GOL/Mansione)
+  body+=wHeading("Dati Azienda",2);
+  {
+    const W=4703;
+    const fields=[
+      ["Ragione Sociale",an0.ragione_sociale||""],
+      ["Data compilazione",an0.data_compilazione||""],
+      ["Periodo di riferimento",periodo0||""],
+      ["Datore di Lavoro",an0.datore_lavoro||""],
+      ["RSPP",an0.rspp||""],
+      ["Medico Competente",an0.medico_competente||""],
+      ["RLS / RLST",an0.rls||""],
+    ];
+    const hdrRow=wTrHdr(wHdrCell("Campo","1F497D",W)+wHdrCell("Valore","1F497D",W));
+    const dataRows=fields.map(([k,v],i)=>{
+      const bg=i%2===0?"FFFFFF":"F7F7F7";
+      return wTrData(wDataCell(k,bg,W,true,18)+wDataCell(v,bg,W,false,18));
+    }).join("");
+    body+=`<w:tbl>${wTblProps([W,W])}${hdrRow}${dataRows}</w:tbl>`;
+  }
+  body+=wPar("");
+
+  // Riepilogo risultati per GOL
+  body+=wHeading("Riepilogo Gruppi Omogenei Lavoratori (GOL)",2);
+  {
+    const Ws=[4500,1500,1000,1200,1200,1200,1200,1200];
+    const lvFillCell={BASSO:"C6EFCE",MEDIO:"FFEB9C",ALTO:"FFC7CE"};
+    function wHdrCellSp(label,w){
+      return`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/><w:shd w:val="clear" w:color="auto" w:fill="1F497D"/><w:tcMar><w:top w:w="120" w:type="dxa"/><w:bottom w:w="120" w:type="dxa"/><w:left w:w="160" w:type="dxa"/><w:right w:w="160" w:type="dxa"/></w:tcMar></w:tcPr><w:p><w:pPr><w:jc w:val="left"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:color w:val="FFFFFF"/><w:sz w:val="20"/></w:rPr><w:t>${label}</w:t></w:r></w:p></w:tc>`;
+    }
+    function wDataCellSp(text,fill,w,bold,sz){
+      return`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/><w:shd w:val="clear" w:color="auto" w:fill="${fill}"/><w:tcMar><w:top w:w="100" w:type="dxa"/><w:bottom w:w="100" w:type="dxa"/><w:left w:w="160" w:type="dxa"/><w:right w:w="160" w:type="dxa"/></w:tcMar></w:tcPr><w:p><w:pPr><w:jc w:val="left"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>${bold?"<w:b/>":"<w:b w:val=\"0\">"+"</w:b>"}<w:sz w:val="${sz}"/></w:rPr><w:t>${xe(text)}</w:t></w:r></w:p></w:tc>`;
+    }
+    function wLvlCellSp(lv,fill,w){
+      return`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/><w:shd w:val="clear" w:color="auto" w:fill="${fill}"/><w:tcMar><w:top w:w="100" w:type="dxa"/><w:bottom w:w="100" w:type="dxa"/><w:left w:w="160" w:type="dxa"/><w:right w:w="160" w:type="dxa"/></w:tcMar></w:tcPr><w:p><w:pPr><w:jc w:val="left"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:sz w:val="20"/></w:rPr><w:t>${lv}</w:t></w:r></w:p></w:tc>`;
+    }
+    const hdr=`<w:tr><w:trPr><w:trHeight w:val="480" w:hRule="atLeast"/><w:cantSplit w:val="1"/></w:trPr>${
+      wHdrCellSp("GOL / Mansione",Ws[0])+wHdrCellSp("Livello",Ws[1])+wHdrCellSp("Totale",Ws[2])+
+      wHdrCellSp("Ind.Az.",Ws[3])+wHdrCellSp("Contenuto",Ws[4])+wHdrCellSp("Contesto",Ws[5])+
+      wHdrCellSp("Amb.",Ws[6])+wHdrCellSp("Orario",Ws[7])
+    }</w:tr>`;
+    const rows=lista.map((g,i)=>{
+      const r=ris[i];
+      const nm=g.anagrafica.gruppo_omogeneo||g.nome;
+      const bg=i%2===0?"FFFFFF":"F2F2F2";
+      const lvFill=lvFillCell[r.lv]||"EEEEEE";
+      return`<w:tr><w:trPr><w:trHeight w:val="420" w:hRule="atLeast"/><w:cantSplit w:val="1"/></w:trPr>${
+        wDataCellSp(nm,bg,Ws[0],true,20)+
+        wLvlCellSp(r.lv,lvFill,Ws[1])+
+        wDataCellSp(r.tot.toFixed(1),bg,Ws[2],true,20)+
+        wDataCellSp(r.ia_pond.toFixed(0),bg,Ws[3],false,18)+
+        wDataCellSp(r.cm.toFixed(1),bg,Ws[4],false,18)+
+        wDataCellSp(r.ctx.toFixed(1),bg,Ws[5],false,18)+
+        wDataCellSp(r.amb.toFixed(0),bg,Ws[6],false,18)+
+        wDataCellSp(r.ora.toFixed(0),bg,Ws[7],false,18)
+      }</w:tr>`;
+    }).join("");
+    body+=`<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/><w:tblW w:type="auto" w:w="0"/></w:tblPr><w:tblGrid>${Ws.map(w=>`<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>${hdr}${rows}</w:tbl>`;
+  }
+
+  // ── PAGINE GOL: una per GOL, solo risultati e dettagli ──────────────────
+  lista.forEach((g,gi)=>{
+    const r=ris[gi];
+    const golLabel=g.anagrafica.gruppo_omogeneo||g.nome;
+    const num=gi+1;
+
+    // page break prima di ogni GOL
+    body+=wPageBreak();
+
+    // heading GOL
+    body+=wHeading(`GOL ${num}: ${golLabel}`,1);
+
+    // sezioni numerate da 1 per ogni GOL (no scheda, già in prima pagina)
+    body+=wHeading(`${num}.1 Risultati della Valutazione`,2);
+    body+=tblRisultatiBox(r.lv,r.tot);
+    body+=tblInterpretazione(r.lv);
+
+    body+=wHeading(`${num}.2 Punteggi per Area`,2);
+    body+=tblPunteggi(r);
+
+    body+=wHeading(`${num}.3 Dettaglio - Indicatori Aziendali`,2);
+    body+=pLegendaIA();
+    body+=tblIA(g.risposte);
+
+    body+=wHeading(`${num}.4 Dettaglio - Contesto del Lavoro`,2);
+    const ctSez=[
+      ["Funzione e cultura organizzativa",FUNZIONE_CULTURA,"ctx"],
+      ["Ruolo nell'ambito dell'organizzazione",RUOLO_ORGANIZZAZIONE,"ctx"],
+      ["Evoluzione della carriera",EVOLUZIONE_CARRIERA,"ctx"],
+      ["Autonomia decisionale",AUTONOMIA_DECISIONALE,"ctx"],
+      ["Rapporti interpersonali sul lavoro",RAPPORTI_INTERPERSONALI,"ctx"],
+      ["Interfaccia casa - lavoro",INTERFACCIA_CASA_LAVORO,"ctx"],
+    ];
+    ctSez.forEach(([t,dom,pf],si)=>{
+      body+=wHeading(`${num}.4.${si+1} ${t}`,3);
+      body+=tblSiNo(dom,pf,g.risposte);
+    });
+
+    body+=wHeading(`${num}.5 Dettaglio - Contenuto del Lavoro`,2);
+    const cSez=[
+      ["Ambiente di lavoro ed attrezzature",AMBIENTE_LAVORO,"c"],
+      ["Pianificazione dei compiti",PIANIFICAZIONE_COMPITI,"c"],
+      ["Carico di lavoro - Ritmo di lavoro",CARICO_RITMO,"c"],
+      ["Orario di lavoro",ORARIO_LAVORO,"c"],
+    ];
+    cSez.forEach(([t,dom,pf],si)=>{
+      body+=wHeading(`${num}.5.${si+1} ${t}`,3);
+      body+=tblSiNo(dom,pf,g.risposte);
+    });
+  });
+
+  // sectPr con footer
+  const sectPr=`<w:sectPr>
+  <w:footerReference w:type="default" r:id="rId1"/>
+  <w:pgSz w:w="11906" w:h="16838"/>
+  <w:pgMar w:top="1134" w:right="1418" w:bottom="1134" w:left="1418" w:footer="567"/>
+</w:sectPr>`;
+
+  return`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas"
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+  xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"
+  mc:Ignorable="w14" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+  <w:body>${body}${sectPr}</w:body>
+</w:document>`;
+}
+
+// ── styles.xml ────────────────────────────────────────────────────────────
+const STYLES_XML=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:docDefaults><w:rPrDefault><w:rPr>
+    <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+    <w:sz w:val="20"/><w:szCs w:val="20"/>
+  </w:rPr></w:rPrDefault></w:docDefaults>
+  <w:style w:type="paragraph" w:styleId="Normal"><w:name w:val="Normal"/>
+    <w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="20"/></w:rPr>
+    <w:pPr><w:spacing w:before="0" w:after="40"/></w:pPr>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/>
+    <w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:color w:val="1F497D"/><w:sz w:val="28"/></w:rPr>
+    <w:pPr><w:spacing w:before="80" w:after="40"/><w:outlineLvl w:val="0"/></w:pPr>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/>
+    <w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:color w:val="1F497D"/><w:sz w:val="24"/></w:rPr>
+    <w:pPr><w:spacing w:before="60" w:after="30"/><w:outlineLvl w:val="1"/></w:pPr>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="Heading3"><w:name w:val="heading 3"/><w:basedOn w:val="Normal"/>
+    <w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:b/><w:color w:val="1F497D"/><w:sz w:val="20"/></w:rPr>
+    <w:pPr><w:spacing w:before="40" w:after="20"/><w:outlineLvl w:val="2"/></w:pPr>
+  </w:style>
+  <w:style w:type="table" w:styleId="TableGrid"><w:name w:val="Table Grid"/>
+    <w:tblPr><w:tblBorders>
+      <w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+      <w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+      <w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+      <w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+      <w:insideH w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+      <w:insideV w:val="single" w:sz="4" w:space="0" w:color="auto"/>
+    </w:tblBorders></w:tblPr>
+  </w:style>
+</w:styles>`;
+
+// ── pacchetto DOCX con JSZip ─────────────────────────────────────────────
+async function buildDocx(lista){
+  if(typeof JSZip==="undefined"){
+    alert("Errore: libreria JSZip non disponibile. Verifica la connessione internet.");return null;
+  }
+  const az=(lista[0]?.anagrafica?.ragione_sociale||"SLC").replace(/[^a-zA-Z0-9_ -]/g,"").trim().replace(/ /g,"_");
+  const nomeFile=`SLC_${az}_${new Date().toISOString().slice(0,10).replace(/-/g,"")}`;
+
+  const footerXml=buildFooterXml(nomeFile);
+  const documentXml=buildDocumentXml(lista,nomeFile);
+
+  const zip=new JSZip();
+  zip.file("[Content_Types].xml",
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+  <Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>
+</Types>`);
+
+  zip.file("_rels/.rels",
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`);
+
+  zip.file("word/_rels/document.xml.rels",
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`);
+
+  zip.file("word/document.xml",documentXml);
+  zip.file("word/styles.xml",STYLES_XML);
+  zip.file("word/footer1.xml",footerXml);
+
+  return{zip,nomeFile};
+}
+
+async function downloadDocx(lista){
+  const res=await buildDocx(lista);
+  if(!res)return;
+  const buf=await res.zip.generateAsync({type:"arraybuffer",compression:"DEFLATE",compressionOptions:{level:6}});
+  const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=res.nomeFile+".docx";a.click();URL.revokeObjectURL(url);
+}
+
+async function esportaWordGol(){await downloadDocx([gols[golIdx]]);}
+async function esportaWordTutti(){await downloadDocx(gols);}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RENDER PRINCIPALE
+// ═══════════════════════════════════════════════════════════════════════════
+function renderTabs(){
+  const bar=document.getElementById("gol-tabs");
+  let html="";
+  gols.forEach((g,i)=>{
+    const nm=g.anagrafica.gruppo_omogeneo||g.nome;
+    const act=i===golIdx?"active":"";
+    html+=`<div class="gol-tab ${act}">
+      <button class="gol-tab-btn" onclick="selectGol(${i})">${esc(nm)}</button>
+      <button class="gol-tab-arr" onclick="toggleMenu(${i},event)">▼</button>
+      <div class="gol-menu">
+        <button onclick="duplicaGol(${i})">Duplica GOL</button>
+        <button class="del" onclick="eliminaGol(${i})">Elimina GOL</button>
+      </div>
+    </div>`;
+  });
+  html+=`<button id="btn-add-gol" onclick="aggiungiGol()">+ Nuovo GOL</button>`;
+  bar.innerHTML=html;
+}
+
+function selectGol(i){golIdx=i;closeAllMenus();render();}
+
+function renderContent(){
+  const map={scheda:buildScheda,ind_az:buildIndAz,contenuto:buildContenuto,contesto:buildContesto,risultati:buildRisultati,riepilogo:buildRiepilogo};
+  document.getElementById("content").innerHTML=(map[sezione]||buildScheda)();
+}
+
+function renderNav(){
+  document.querySelectorAll(".nav-btn").forEach(b=>{
+    b.classList.toggle("active",b.dataset.sec===sezione);
+  });
+  document.querySelectorAll(".nav-btn").forEach(b=>{
+    b.onclick=()=>goSec(b.dataset.sec);
+  });
+}
+
+function render(){
+  renderTabs();
+  renderContent();
+  renderNav();
+}
+
+render();
+</script>
+</body>
+</html>
